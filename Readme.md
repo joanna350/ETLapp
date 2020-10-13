@@ -6,6 +6,7 @@ Connex One Project
 ```
 .
 ├── IMDB-Movie-Data.csv
+├── Readme.md
 ├── app.py
 ├── db.py
 ├── downloads
@@ -14,7 +15,6 @@ Connex One Project
 ├── templates
 │   ├── dataset.html
 │   └── index.html
-├── test.db
 └── uploads
 ```
 

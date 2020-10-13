@@ -35,12 +35,17 @@ def baseline(url = "https://breakingbadapi.com/api/characters"):
     :return: comparable data in set
     '''
     response = requests.request("GET", url)
-    characters = response.json() # list of dictionaries per each character
+    # list of dictionaries per each character
+    characters = response.json()
+    # one overlap, one unknown
     actors = set()
+
     for c in characters:
-        actors.add(c['portrayed']) # one overlap, one unknown
+        actors.add(c['portrayed'])
+
     if 'Unknown' in actors:
         actors.remove('Unknown')
+
     return actors
 
 def process_file(path, filename):
@@ -49,9 +54,12 @@ def process_file(path, filename):
     :param filename: so that the user may download
     :return:
     '''
+
+    ## Extract
     raw = pd.read_csv(path) # read in the uploaded file
     basechars = baseline() # retrieve the list of baseline characters to compare with
 
+    ## Transform
     # return 1 if matches the rubric (at least one actor in common)
     fa = lambda x: 1 if set(i.strip() for i in x.split(',')).intersection(set(basechars)) else 0
     raw['Match'] = raw['Actors'].apply(fa)
@@ -60,6 +68,7 @@ def process_file(path, filename):
     fr = lambda x: x*1.3
     raw['Revenue (Millions GBP)'] = raw['Revenue (Millions)'].apply(fr)
 
+    ## Load
     # output the identified set of films to a new csv for user
     df = pd.DataFrame(raw[raw['Match'] == 1])
     df.to_csv(app.config['DOWNLOAD_FOLDER'] + filename, index = False)
@@ -71,6 +80,7 @@ def process_file(path, filename):
     # for an endpoint that paginates this information during a session
     session['table'] = df.to_dict(into=OrderedDict) # json serializable
 
+    # instantiate database to load to
     db = Database(DB_URL)
     db.upload_df_to_sql(df, 'test')
     db.get_df_from_sql('test')
@@ -81,7 +91,7 @@ def html_table():
     unpack = session['table'] if 'table' in session else ''
     df = pd.DataFrame(unpack)
     return render_template("dataset.html",
-                           tables = [df.to_html(classes='data')], # index = False kept for reference
+                           tables = [df.to_html(classes='data')], # index kept for reference
                            titles = df.columns.values)
 
 @app.route('/uploads/<filename>')
