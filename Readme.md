@@ -5,7 +5,6 @@ Connex One Project
 #### Root Directory Tree
 ```
 .
-├── IMDB-Movie-Data.csv
 ├── Readme.md
 ├── app.py
 ├── db.py
@@ -36,8 +35,10 @@ python3 main.py
 0.0.0.0:5000
 ```
 
-##### Once file is chosen and uploaded, it will be immediately processed and the result downloaded to your device
-
+##### Once file is uploaded, it will be immediately processed and the result downloaded to your device
+```
+[filename_without_the_extension]-retrieved.csv
+```
 ##### On the console, the table would be visible in print
 
 ##### For pagination of the table, use the following endpoint
