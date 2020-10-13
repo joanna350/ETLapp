@@ -33,7 +33,7 @@ class Database:
                           }
                   )
 
-        # could use with logging.debug(mseg)
+        # usable for logging.debug(mseg)
         mseg = f'INFO: Loading {len(df)} rows INTO {table_name} table'
 
     def get_df_from_sql(self, table_name):

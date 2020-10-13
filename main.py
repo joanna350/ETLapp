@@ -18,7 +18,7 @@ DB_URL = 'sqlite:///test.db' # could be postgresql, mysql combinations
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-ALLOWED_EXTENSIONS = {'csv'} # for now the only acceptable extension
+ALLOWED_EXTENSIONS = {'csv'} # for now the only extension of interest
 
 def allowed_file(filename):
     '''
