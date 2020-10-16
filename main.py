@@ -48,6 +48,39 @@ def baseline(url = "https://breakingbadapi.com/api/characters"):
 
     return actors
 
+def extract(path):
+    df = pd.read_csv(path)
+    return df
+
+def transform(basechars, raw):
+
+    # return 1 if matches the rubric (at least one actor in common)
+    fa = lambda x: 1 if set(i.strip() for i in x.split(',')).intersection(set(basechars)) else 0
+    raw['Match'] = raw['Actors'].apply(fa)
+
+    # convert the revenue by multiplying 1.3 USD/GBP
+    fr = lambda x: x * 1.3
+    raw['Revenue (Millions GBP)'] = raw['Revenue (Millions)'].apply(fr)
+
+    return raw
+
+def load_csv(data, filename):
+    # output the identified set of films to a new csv for user
+    df = pd.DataFrame(data[data['Match'] == 1])
+    df.to_csv(app.config['DOWNLOAD_FOLDER'] + filename, index = False)
+
+def load_table(data):
+    # select the columns for table creation
+    df = pd.DataFrame(data[data['Match'] == 1],
+                      columns=['Title', 'Year', 'Revenue (Millions GBP)'])
+    # for an endpoint that paginates this information during a session
+    session['table'] = df.to_dict(into=OrderedDict)  # json serializable
+
+    # instantiate database to load to
+    db = Database(DB_URL)
+    db.upload_df_to_sql(df, 'test')
+    db.get_df_from_sql('test')
+
 def process_file(path, filename):
     '''
     :param path: to upload from
@@ -56,35 +89,15 @@ def process_file(path, filename):
     '''
 
     ## Extract
-    raw = pd.read_csv(path) # read in the uploaded file
+    raw = extract(path) # read in the uploaded file
     basechars = baseline() # retrieve the list of baseline characters to compare with
 
     ## Transform
-    # return 1 if matches the rubric (at least one actor in common)
-    fa = lambda x: 1 if set(i.strip() for i in x.split(',')).intersection(set(basechars)) else 0
-    raw['Match'] = raw['Actors'].apply(fa)
-
-    # convert the revenue by multiplying 1.3 USD/GBP
-    fr = lambda x: x*1.3
-    raw['Revenue (Millions GBP)'] = raw['Revenue (Millions)'].apply(fr)
+    data = transform(basechars, raw)
 
     ## Load
-    # output the identified set of films to a new csv for user
-    df = pd.DataFrame(raw[raw['Match'] == 1])
-    df.to_csv(app.config['DOWNLOAD_FOLDER'] + filename, index = False)
-
-    # select the columns for table creation
-    df = pd.DataFrame(raw[raw['Match'] == 1],
-                      columns=['Title', 'Year', 'Revenue (Millions GBP)'])
-
-    # for an endpoint that paginates this information during a session
-    session['table'] = df.to_dict(into=OrderedDict) # json serializable
-
-    # instantiate database to load to
-    db = Database(DB_URL)
-    db.upload_df_to_sql(df, 'test')
-    db.get_df_from_sql('test')
-
+    load_csv(data, filename)
+    load_table(data)
 
 @app.route('/dataset/', methods=['POST', 'GET'])
 def html_table():
